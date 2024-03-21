@@ -1,6 +1,7 @@
 package com.dazecake.autodroidx
 
 import android.os.Build
+import com.dazecake.autodroidx.loader.JNI
 import com.dazecake.autodroidx.utils.Log
 import com.dazecake.autodroidx.utils.Options
 import kotlin.system.exitProcess
@@ -38,6 +39,8 @@ object Main {
         Log.setLevel(options.logLevel)
 
         Log.i("Device: [" + Build.MANUFACTURER + "] " + Build.BRAND + " " + Build.MODEL + " (Android " + Build.VERSION.RELEASE + ")")
+
+        Log.i(JNI().stringFromJNI())
     }
 }
 

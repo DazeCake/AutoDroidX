@@ -25,3 +25,7 @@ The core of adx, all operations are ultimately sent to the agent and are finally
 ### 🗒 server
 
 Start and manage agent. Also instance Management Center allows you to centrally manage multiple Android device. 
+
+### 🗒 script-loader
+
+Cpp compatibility layer that supports multiple script loading. Powered by [ScriptX](https://github.com/Tencent/ScriptX)

@@ -1,4 +1,5 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
+import java.io.ByteArrayOutputStream
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -9,6 +10,12 @@ android {
     namespace = "com.dazecake.autodroidx"
     compileSdk = 34
 
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
     defaultConfig {
         applicationId = "com.dazecake.autodroidx"
         minSdk = 21
@@ -17,6 +24,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags("-std=c++17")
+                abiFilters("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+            }
+        }
     }
 
     buildTypes {
@@ -26,6 +39,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path("CMakeLists.txt")
         }
     }
     compileOptions {
@@ -47,9 +65,19 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
-tasks.register<Copy>("makeJar") {
-//    from("build/intermediates/packaged-classes/debug/classes.jar")
-    from("build/tmp/kotlin-classes/debug/com/dazecake/autodroidx/MainKt.class")
-    into("build/libs")
-    rename { "autodroidx-agent.jar" }
+tasks.register<Exec>("runAgent") {
+    commandLine(
+        "adb",
+        "push",
+        "$workingDir/build/outputs/apk/debug/agent-debug.apk",
+        "/data/local/tmp/autodroidx-agent.jar"
+    )
+    commandLine(
+        "adb",
+        "shell",
+        "CLASSPATH=/data/local/tmp/autodroidx-agent.jar",
+        "app_process",
+        "/",
+        "com.dazecake.autodroidx.Main"
+    )
 }.dependsOn("build")
