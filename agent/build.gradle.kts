@@ -1,5 +1,4 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
-import java.io.ByteArrayOutputStream
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -24,6 +23,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 cppFlags("-std=c++17")
@@ -65,13 +66,17 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
-tasks.register<Exec>("runAgent") {
+tasks.register<Exec>("pushAgent") {
+    val s = File.separator
     commandLine(
         "adb",
         "push",
-        "$workingDir/build/outputs/apk/debug/agent-debug.apk",
-        "/data/local/tmp/autodroidx-agent.jar"
+        "build${s}outputs${s}apk${s}debug${s}agent-debug.apk",
+        "/data/local/tmp/autodroidx-agent.jar",
     )
+}.dependsOn("build")
+
+tasks.register<Exec>("runAgent") {
     commandLine(
         "adb",
         "shell",
@@ -80,4 +85,4 @@ tasks.register<Exec>("runAgent") {
         "/",
         "com.dazecake.autodroidx.Main"
     )
-}.dependsOn("build")
+}.dependsOn("pushAgent")
