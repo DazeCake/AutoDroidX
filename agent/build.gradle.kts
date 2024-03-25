@@ -3,6 +3,7 @@ import com.android.build.gradle.internal.tasks.factory.dependsOn
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    kotlin("kapt")
 }
 
 android {
@@ -32,6 +33,16 @@ android {
             }
         }
     }
+    // make sure java compile is executed before ndk compile
+    // because we rely on Jenny generating cpp code
+    applicationVariants.all { variant ->
+        variant.externalNativeBuildProviders.forEach {
+            it.configure {
+                it.dependsOn(variant.javaCompileProvider.name)
+            }
+        }
+        return@android
+    }
 
     buildTypes {
         release {
@@ -44,7 +55,7 @@ android {
     }
     externalNativeBuild {
         cmake {
-            path("CMakeLists.txt")
+            path("src/main/cpp/CMakeLists.txt")
         }
     }
     compileOptions {
@@ -64,6 +75,35 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // Jenny https://github.com/LanderlYoung/Jenny
+    compileOnly(libs.jenny.annotation)
+    kapt(libs.jenny.compiler)
+}
+
+kapt {
+    arguments {
+        // pass arguments to jenny
+        // arg("jenny.threadSafe", "false")
+        arg("jenny.errorLoggerFunction", "jennySampleErrorLog")
+        // arg("jenny.outputDirectory", project.buildDir.absolutePath+"/test")
+        arg("jenny.headerOnlyProxy", "true")
+        arg("jenny.useJniHelper", "true")
+        // arg("jenny.fusionProxyHeaderName", "JennyFusionProxy.h")
+    }
+}
+
+tasks.register<Copy>("copyGeneratedCpp") {
+    val generatedDir = "generated/source/kapt/debug"
+    val buildDir = project.layout.buildDirectory.get().asFile
+    copy {
+        from(File(buildDir, "${generatedDir}/jenny/proxy"))
+        into(project.file("src/main/cpp/gen"))
+    }
+//    copy {
+//        from(File(buildDir, "${generatedDir}/jenny/glue/header"))
+//        into(project.file("src/main/cpp"))
+//    }
 }
 
 tasks.register<Exec>("pushAgent") {
@@ -86,3 +126,10 @@ tasks.register<Exec>("runAgent") {
         "com.dazecake.autodroidx.Main"
     )
 }.dependsOn("pushAgent")
+
+afterEvaluate {
+    // copy file to source after jenny generate
+    tasks.named("kaptDebugKotlin") {
+        finalizedBy("copyGeneratedCpp")
+    }
+}

@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.22.1)
 
+include_directories(
+        gen
+)
+
 add_library(
         ScriptLoader
         SHARED
-        src/main/cpp/ScriptLoader.cpp
+        ScriptLoader.cpp
 )
 
 find_library(

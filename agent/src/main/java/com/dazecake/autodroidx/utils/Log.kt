@@ -1,6 +1,7 @@
 package com.dazecake.autodroidx.utils
 
 import android.util.Log
+import io.github.landerlyoung.jenny.NativeProxy
 import java.io.FileDescriptor
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -30,9 +31,10 @@ internal class NullOutputStream : OutputStream() {
     }
 }
 
-
+@NativeProxy(allFields = true, allMethods = true)
 object Log {
 
+    @JvmStatic
     private var threshold: Level = Level.INFO
 
     private const val TAG = "AutoDroidX"
@@ -41,16 +43,19 @@ object Log {
     private val CONSOLE_OUT = PrintStream(FileOutputStream(FileDescriptor.out))
     private val CONSOLE_ERR = PrintStream(FileOutputStream(FileDescriptor.err))
 
+    @JvmStatic
     private fun isEnabled(level: Level): Boolean {
         return level.ordinal >= threshold.ordinal
     }
 
+    @JvmStatic
     fun disableSystemStreams() {
         val nullStream = PrintStream(NullOutputStream())
         System.setOut(nullStream)
         System.setErr(nullStream)
     }
 
+    @JvmStatic
     fun v(message: String) {
         if (isEnabled(Level.VERBOSE)) {
             Log.v(TAG, message)
@@ -58,6 +63,7 @@ object Log {
         }
     }
 
+    @JvmStatic
     fun d(message: String) {
         if (isEnabled(Level.DEBUG)) {
             Log.d(TAG, message)
@@ -65,6 +71,7 @@ object Log {
         }
     }
 
+    @JvmStatic
     fun i(message: String) {
         if (isEnabled(Level.INFO)) {
             Log.i(TAG, message)
@@ -72,6 +79,7 @@ object Log {
         }
     }
 
+    @JvmStatic
     fun w(message: String) {
         if (isEnabled(Level.WARN)) {
             Log.w(TAG, message)
@@ -79,6 +87,7 @@ object Log {
         }
     }
 
+    @JvmStatic
     fun e(message: String) {
         if (isEnabled(Level.ERROR)) {
             Log.e(TAG, message)
@@ -86,6 +95,7 @@ object Log {
         }
     }
 
+    @JvmStatic
     fun e(message: String, e: Throwable) {
         if (isEnabled(Level.ERROR)) {
             Log.e(TAG, message, e)
@@ -94,11 +104,11 @@ object Log {
         }
     }
 
+    @JvmStatic
     fun setLevel(level: Level) {
         Log.i(TAG, "Setting log level to $level")
         threshold = level
     }
-
 
 
 }
